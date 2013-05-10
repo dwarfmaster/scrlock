@@ -2,8 +2,8 @@ scrlock - simple screen locker
 ============================
 simple screen locker utility for X. 
 
-This program is a derivated work from slock utility by suckless.org. Its aim 
-is to add some features while keeping is minimalistic interface.
+This program is a derived work from slock utility by suckless.org. Its aim 
+is to add some features while keeping slock minimalistic interface.
 
 Requirements
 ------------
