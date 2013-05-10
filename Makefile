@@ -47,4 +47,10 @@ uninstall:
 	@echo removing executable file from ${DESTDIR}${PREFIX}/bin
 	@rm -f ${DESTDIR}${PREFIX}/bin/slock
 
-.PHONY: all options clean dist install uninstall
+chmod:
+	@echo change slock owner to root:root
+	@chown root:root slock
+	@echo change slock permissions
+	@chmod u+s slock
+
+.PHONY: all options clean dist install uninstall chmod
