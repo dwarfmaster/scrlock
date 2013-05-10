@@ -210,6 +210,9 @@ readpw(Display *dpy, const char *pws)
 	maxLen = 255;
 	running = True;
 
+	for(screen = 0; screen < nscreens; screen++)
+		blitLocked(dpy, screen);
+
 	/* As "slock" stands for "Simple X display locker", the DPMS settings
 	 * had been removed and you can set it with "xset" or some other
 	 * utility. This way the user can easily set a customized DPMS
