@@ -1,10 +1,15 @@
 # slock - simple screen locker
 # See LICENSE file for copyright and license details.
 
-include config.mk
-
 SRC = scrlock.c
 OBJ = ${SRC:.c=.o}
+PREFIX = /usr/local
+CC = cc
+
+INCS = -I. -I/usr/include -I${X11INC}
+LIBS = -L/usr/lib -lc -lcrypt -L${X11LIB} -lX11 -lXext
+CFLAGS = -std=c99 -pedantic -Wall -Os ${INCS}
+LDFLAGS = -s ${LIBS}
 
 all: options scrlock
 
@@ -26,15 +31,15 @@ scrlock: ${OBJ}
 
 clean:
 	@echo cleaning
-	@rm -f scrlock ${OBJ} scrlock-${VERSION}.tar.gz
+	@rm -f scrlock ${OBJ} scrlock.tar.gz
 
 dist: clean
 	@echo creating dist tarball
-	@mkdir -p scrlock-${VERSION}
-	@cp -R LICENSE Makefile README config.mk ${SRC} scrlock-${VERSION}
-	@tar -cf scrlock-${VERSION}.tar scrlock-${VERSION}
-	@gzip scrlock-${VERSION}.tar
-	@rm -rf scrlock-${VERSION}
+	@mkdir -p scrlock
+	@cp -R LICENSE Makefile README config.mk ${SRC} scrlock
+	@tar -cf scrlock.tar scrlock
+	@gzip scrlock.tar
+	@rm -rf scrlock
 
 install: all
 	@echo installing executable file to ${DESTDIR}${PREFIX}/bin
