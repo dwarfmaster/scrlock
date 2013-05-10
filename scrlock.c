@@ -1,5 +1,7 @@
 
 /* See LICENSE file for license details. */
+#include "config.h"
+
 #define _XOPEN_SOURCE 500
 #if HAVE_SHADOW_H
 #include <shadow.h>
