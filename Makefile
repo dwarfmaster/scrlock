@@ -6,7 +6,7 @@ include config.mk
 SRC = slock.c
 OBJ = ${SRC:.c=.o}
 
-all: options slock
+all: options scrlock
 
 options:
 	@echo slock build options:
@@ -20,37 +20,37 @@ options:
 
 ${OBJ}: config.mk
 
-slock: ${OBJ}
+scrlock: ${OBJ}
 	@echo CC -o $@
 	@${CC} -o $@ ${OBJ} ${LDFLAGS}
 
 clean:
 	@echo cleaning
-	@rm -f slock ${OBJ} slock-${VERSION}.tar.gz
+	@rm -f scrlock ${OBJ} scrlock-${VERSION}.tar.gz
 
 dist: clean
 	@echo creating dist tarball
-	@mkdir -p slock-${VERSION}
-	@cp -R LICENSE Makefile README config.mk ${SRC} slock-${VERSION}
-	@tar -cf slock-${VERSION}.tar slock-${VERSION}
-	@gzip slock-${VERSION}.tar
-	@rm -rf slock-${VERSION}
+	@mkdir -p scrlock-${VERSION}
+	@cp -R LICENSE Makefile README config.mk ${SRC} scrlock-${VERSION}
+	@tar -cf scrlock-${VERSION}.tar scrlock-${VERSION}
+	@gzip scrlock-${VERSION}.tar
+	@rm -rf scrlock-${VERSION}
 
 install: all
 	@echo installing executable file to ${DESTDIR}${PREFIX}/bin
 	@mkdir -p ${DESTDIR}${PREFIX}/bin
-	@cp -f slock ${DESTDIR}${PREFIX}/bin
-	@chmod 755 ${DESTDIR}${PREFIX}/bin/slock
-	@chmod u+s ${DESTDIR}${PREFIX}/bin/slock
+	@cp -f scrlock ${DESTDIR}${PREFIX}/bin
+	@chmod 755 ${DESTDIR}${PREFIX}/bin/scrlock
+	@chmod u+s ${DESTDIR}${PREFIX}/bin/scrlock
 
 uninstall:
 	@echo removing executable file from ${DESTDIR}${PREFIX}/bin
-	@rm -f ${DESTDIR}${PREFIX}/bin/slock
+	@rm -f ${DESTDIR}${PREFIX}/bin/scrlock
 
 chmod:
-	@echo change slock owner to root:root
-	@chown root:root slock
-	@echo change slock permissions
-	@chmod u+s slock
+	@echo change scrlock owner to root:root
+	@chown root:root scrlock
+	@echo change scrlock permissions
+	@chmod u+s scrlock
 
 .PHONY: all options clean dist install uninstall chmod
