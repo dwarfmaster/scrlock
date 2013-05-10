@@ -15,5 +15,8 @@
 // Font
 #define FONT "-*-lucida-bold-r-*-*-20-140-*-*-*-*-iso8859-15"
 
+// Fonctions (undef to disabme)
+#define MESSAGE // Allow to let message
+
 #endif
 

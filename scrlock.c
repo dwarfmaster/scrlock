@@ -77,6 +77,7 @@ getpw(void) { /* only run as root */
 }
 #endif
 
+#ifdef MESSAGE
 static void saveMsg(const char* msg)
 {
 	char buffer[1024];
@@ -146,33 +147,36 @@ static void blitMsg(Display* dpy, int screen, const char* msg, int len)
 			XDisplayHeight(dpy, screen)/2 + 50,
 			"Press ctrl + space to cancel.", 29);
 }
+#endif
 
 static void blitLocked(Display* dpy, int screen)
 {
-	GC gc;
-
 	XSetWindowBackground(dpy, locks[screen]->win, locks[screen]->colors[0]);
 	XClearWindow(dpy, locks[screen]->win);
 
+#ifdef MESSAGE
+	GC gc;
 	gc = createGC(dpy, screen, locks[screen]->win, locks[screen]->colors[1]);
 	XDrawString(dpy, locks[screen]->win, gc, 
 			XDisplayWidth(dpy, screen)/2 - 50,
 			XDisplayHeight(dpy, screen)/2 - 10,
 			"Press ctrl + space to let a message.", 35);
+#endif
 }
 
 static void blitUnlock(Display* dpy, int screen)
 {
-	GC gc;
-
 	XSetWindowBackground(dpy, locks[screen]->win, locks[screen]->colors[1]);
 	XClearWindow(dpy, locks[screen]->win);
 
+#ifdef MESSAGE
+	GC gc;
 	gc = createGC(dpy, screen, locks[screen]->win, locks[screen]->colors[0]);
 	XDrawString(dpy, locks[screen]->win, gc, 
 			XDisplayWidth(dpy, screen)/2 - 50,
 			XDisplayHeight(dpy, screen)/2 - 10,
 			"Press ctrl + space to let a message.", 35);
+#endif
 }
 
 static void
@@ -182,22 +186,28 @@ readpw(Display *dpy)
 readpw(Display *dpy, const char *pws)
 #endif
 {
-	char buf[32], passwd[256], msg[51];
+	char buf[32], passwd[256];
 	char* act;
 	int num, screen;
-	unsigned int len, llen, msglen;
+	unsigned int len, llen;
 	unsigned int* usedLen = NULL;
 	unsigned int maxLen;
 	KeySym ksym;
 	XEvent ev;
-	Bool inMsg;
 
+#ifdef MESSAGE
+	Bool inMsg;
+	unsigned int msglen;
+	char msg[51];
 	msg[0] = 0;
-	len = llen = msglen = 0;
+	msglen = 0;
+	inMsg = False;
+#endif
+
+	len = llen = 0;
 	usedLen = &len;
 	act = passwd;
 	maxLen = 255;
-	inMsg = False;
 	running = True;
 
 	/* As "slock" stands for "Simple X display locker", the DPMS settings
@@ -206,6 +216,7 @@ readpw(Display *dpy, const char *pws)
 	 * timeout. */
 	while(running && !XNextEvent(dpy, &ev)) {
 		if(ev.type == KeyPress) {
+#ifdef MESSAGE
 			// Évènement ctrl + space
 			if(ev.xkey.keycode == XKeysymToKeycode(dpy, XK_space)
 					&& (ev.xkey.state & ControlMask))
@@ -235,6 +246,7 @@ readpw(Display *dpy, const char *pws)
 					}
 				}
 			}
+#endif
 
 			buf[0] = 0;
 			num = XLookupString(&ev.xkey, buf, sizeof buf, &ksym, 0);
@@ -250,6 +262,7 @@ readpw(Display *dpy, const char *pws)
 				continue;
 			switch(ksym) {
 				case XK_Return:
+#ifdef MESSAGE
 					if(inMsg) {
 						msg[msglen] = 0;
 						saveMsg(msg);
@@ -270,6 +283,7 @@ readpw(Display *dpy, const char *pws)
 						}
 					}
 					else {
+#endif
 						passwd[len] = 0;
 #ifdef HAVE_BSD_AUTH
 						running = !auth_userokay(getlogin(), NULL, "auth-xlock", passwd);
@@ -279,7 +293,9 @@ readpw(Display *dpy, const char *pws)
 						if(running != False)
 							XBell(dpy, 100);
 						len = 0;
+#ifdef MESSAGE
 					}
+#endif
 					break;
 				case XK_Escape:
 					*usedLen = 0;
@@ -295,11 +311,13 @@ readpw(Display *dpy, const char *pws)
 					}
 					break;
 			}
+#ifdef MESSAGE
 			if(inMsg) {
 				for(screen = 0; screen < nscreens; screen++)
 					blitMsg(dpy, screen, msg, msglen);
 			}
 			else {
+#endif
 				if(llen == 0 && len != 0) {
 					for(screen = 0; screen < nscreens; screen++)
 						blitUnlock(dpy, screen);
@@ -308,7 +326,9 @@ readpw(Display *dpy, const char *pws)
 						blitLocked(dpy, screen);
 				}
 				llen = len;
+#ifdef MESSAGE
 			}
+#endif
 		}
 		else for(screen = 0; screen < nscreens; screen++)
 			XRaiseWindow(dpy, locks[screen]->win);
