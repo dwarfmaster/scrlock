@@ -12,5 +12,8 @@
 #define COLOR1 "black"
 #define COLOR2 "#006600"
 
+// Font
+#define FONT "-*-lucida-bold-r-*-*-20-140-*-*-*-*-iso8859-15"
+
 #endif
 

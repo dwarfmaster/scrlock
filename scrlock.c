@@ -115,7 +115,7 @@ static GC createGC(Display* dpy, int screen, Drawable w, unsigned long color)
 	gc = XCreateGC(dpy, w, GCForeground | GCBackground, &values);
 
 	if(font == 0)
-		font = XLoadFont(dpy, "-*-lucida-bold-r-*-*-20-140-*-*-*-*-iso8859-15");
+		font = XLoadFont(dpy, FONT);
 	XSetFont(dpy, gc, font);
 
 	return gc;
