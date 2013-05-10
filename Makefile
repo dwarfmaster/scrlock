@@ -3,7 +3,7 @@
 
 include config.mk
 
-SRC = slock.c
+SRC = scrlock.c
 OBJ = ${SRC:.c=.o}
 
 all: options scrlock
