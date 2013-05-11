@@ -17,6 +17,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <X11/keysym.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -24,6 +25,10 @@
 #if HAVE_BSD_AUTH
 #include <login_cap.h>
 #include <bsd_auth.h>
+#endif
+
+#ifdef SPY
+static int spys_count;
 #endif
 
 typedef struct {
@@ -179,6 +184,43 @@ static void blitUnlock(Display* dpy, int screen)
 #endif
 }
 
+#ifdef SPY
+void takePicture()
+{
+	char* home = getenv("HOME");
+	if(home == NULL)
+		return;
+
+	char fname[512];
+	time_t t = time(NULL);
+	if(t < 0)
+		return;
+	struct tm* tm = localtime(&t);
+	if(tm == NULL)
+		return;
+	snprintf(fname, 512, "%d-%d_%d-%d-%d.png", tm->tm_mday, tm->tm_mon+1, tm->tm_hour, tm->tm_min, tm->tm_sec);
+
+	char path[1024];
+	snprintf(path, 1024, "%s/%s/%s", home, SPY_SUBDIR, fname);
+
+	pid_t pid;
+	do {
+		pid = fork();
+	} while(pid == -1 && errno == EAGAIN);
+
+	if(pid == -1)
+		return;
+	else if(pid == 0)
+	{
+		char* argv[] = {FSWEBCAM, "-q", "-r", "1920x1080", path, NULL};
+		execv(FSWEBCAM, argv);
+		exit(EXIT_SUCCESS);
+	}
+	else
+		++spys_count;
+}
+#endif
+
 static void
 #ifdef HAVE_BSD_AUTH
 readpw(Display *dpy)
@@ -202,6 +244,10 @@ readpw(Display *dpy, const char *pws)
 	msg[0] = 0;
 	msglen = 0;
 	inMsg = False;
+#endif
+
+#ifndef SPY
+	spys_count = 0;
 #endif
 
 	len = llen = 0;
@@ -294,7 +340,12 @@ readpw(Display *dpy, const char *pws)
 						running = strcmp(crypt(passwd, pws), pws);
 #endif
 						if(running != False)
+						{
 							XBell(dpy, 100);
+#ifdef SPY
+							takePicture();
+#endif
+						}
 						len = 0;
 #ifdef MESSAGE
 					}
@@ -336,6 +387,11 @@ readpw(Display *dpy, const char *pws)
 		else for(screen = 0; screen < nscreens; screen++)
 			XRaiseWindow(dpy, locks[screen]->win);
 	}
+
+#ifdef SPY
+	for(; spys_count >= 0; --spys_count)
+		wait(NULL);
+#endif
 }
 
 static void
