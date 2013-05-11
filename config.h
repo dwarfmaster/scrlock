@@ -15,8 +15,15 @@
 // Font
 #define FONT "-*-lucida-bold-r-*-*-20-140-*-*-*-*-iso8859-15"
 
-// Fonctions (undef to disabme)
+// Fonctions (undef to disable)
 #define MESSAGE // Allow to let message
+#define SPY // Capture a picture with fswebcam when wrong password is typed (need fswebcam)
+
+// Spy options
+#ifdef SPY
+#define SPY_SUBDIR "spy/" // Used path will be $HOME/spy (will not be created so must exist)
+#define FSWEBCAM "/usr/bin/fswebcam" // The complete path to use with
+#endif
 
 #endif
 
