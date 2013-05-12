@@ -229,6 +229,9 @@ void takePicture()
 		return;
 	else if(pid == 0)
 	{
+		if(setuid(getuid()) < 0)
+			return;
+
 		char* argv[] = {FSWEBCAM, "-q", "-r", "1920x1080", path, NULL};
 		execv(FSWEBCAM, argv);
 		exit(EXIT_SUCCESS);
