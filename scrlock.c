@@ -82,6 +82,23 @@ getpw(void) { /* only run as root */
 }
 #endif
 
+#ifdef SCRIPT
+static void executeScript()
+{
+	char buffer[1024];
+
+	if(setuid(getuid()) < 0)
+		return;
+
+	const char* home = getenv("HOME");
+	if(home == NULL)
+		return;
+	snprintf(buffer, 1024, "%s/%s", home, SCRIPT_SUBDIR);
+
+	system(buffer);
+}
+#endif
+
 #ifdef MESSAGE
 static void saveMsg(const char* msg)
 {
@@ -528,5 +545,8 @@ main(int argc, char **argv) {
 	free(locks);
 	XCloseDisplay(dpy);
 
+#ifdef SCRIPT
+	executeScript();
+#endif
 	return 0;
 }
