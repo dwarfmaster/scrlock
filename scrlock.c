@@ -150,7 +150,7 @@ static void blitMsg(Display* dpy, int screen, const char* msg, int len)
 	XDrawString(dpy, locks[screen]->win, gc, 
 			XDisplayWidth(dpy, screen)/2 - 50,
 			XDisplayHeight(dpy, screen)/2 + 50,
-			"Press ctrl + space to cancel.", 29);
+			MSGVALUE, strlen(MSGVALUE));
 }
 #endif
 
@@ -165,7 +165,7 @@ static void blitLocked(Display* dpy, int screen)
 	XDrawString(dpy, locks[screen]->win, gc, 
 			XDisplayWidth(dpy, screen)/2 - 50,
 			XDisplayHeight(dpy, screen)/2 - 10,
-			"Press ctrl + space to let a message.", 35);
+			MSGVALUE, strlen(MSGVALUE));
 #endif
 }
 
@@ -180,7 +180,7 @@ static void blitUnlock(Display* dpy, int screen)
 	XDrawString(dpy, locks[screen]->win, gc, 
 			XDisplayWidth(dpy, screen)/2 - 50,
 			XDisplayHeight(dpy, screen)/2 - 10,
-			"Press ctrl + space to let a message.", 35);
+			MSGVALUE, strlen(MSGVALUE));
 #endif
 }
 

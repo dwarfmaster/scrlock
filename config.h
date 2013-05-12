@@ -19,6 +19,11 @@
 #define MESSAGE // Allow to let message
 #define SPY // Capture a picture with fswebcam when wrong password is typed (need fswebcam)
 
+// Message option
+#ifdef MESSAGE
+#define MSGVALUE "Press ctrl + space to let a message"
+#endif
+
 // Spy options
 #ifdef SPY
 #define SPY_SUBDIR "spy/" // Used path will be $HOME/spy (will not be created so must exist)
