@@ -17,7 +17,7 @@
 
 // Fonctions (undef to disable)
 #define MESSAGE // Allow to let message
-#define SPY // Capture a picture with fswebcam when wrong password is typed (need fswebcam)
+#define SCRIPT // Execute a script when a wrong password is typed
 
 // Message option
 #ifdef MESSAGE
@@ -25,9 +25,8 @@
 #endif
 
 // Spy options
-#ifdef SPY
-#define SPY_SUBDIR "spy/" // Used path will be $HOME/spy (will not be created so must exist)
-#define FSWEBCAM "/usr/bin/fswebcam" // The complete path to use with
+#ifdef SCRIPT
+#define SCRIPTPATH "Prog/error.sh"
 #endif
 
 #endif

@@ -27,8 +27,8 @@
 #include <bsd_auth.h>
 #endif
 
-#ifdef SPY
-static int spys_count;
+#ifdef SCRIPT
+static int scripts_count;
 #endif
 
 typedef struct {
@@ -184,24 +184,16 @@ static void blitUnlock(Display* dpy, int screen)
 #endif
 }
 
-#ifdef SPY
-void takePicture()
+#ifdef SCRIPT
+// takePicture -> execScript
+void execScript()
 {
 	char* home = getenv("HOME");
 	if(home == NULL)
 		return;
 
-	char fname[512];
-	time_t t = time(NULL);
-	if(t < 0)
-		return;
-	struct tm* tm = localtime(&t);
-	if(tm == NULL)
-		return;
-	snprintf(fname, 512, "%d-%d_%d-%d-%d.png", tm->tm_mday, tm->tm_mon+1, tm->tm_hour, tm->tm_min, tm->tm_sec);
-
 	char path[1024];
-	snprintf(path, 1024, "%s/%s/%s", home, SPY_SUBDIR, fname);
+	snprintf(path, 1024, "%s/%s", home, SCRIPTPATH);
 
 	pid_t pid;
 	do {
@@ -212,12 +204,12 @@ void takePicture()
 		return;
 	else if(pid == 0)
 	{
-		char* argv[] = {FSWEBCAM, "-q", "-r", "1920x1080", path, NULL};
-		execv(FSWEBCAM, argv);
+		char* argv[] = {path, NULL};
+		execv(path, argv);
 		exit(EXIT_SUCCESS);
 	}
 	else
-		++spys_count;
+		++scripts_count;
 }
 #endif
 
@@ -246,8 +238,8 @@ readpw(Display *dpy, const char *pws)
 	inMsg = False;
 #endif
 
-#ifndef SPY
-	spys_count = 0;
+#ifndef SCRIPT
+	scripts_count = 0;
 #endif
 
 	len = llen = 0;
@@ -342,8 +334,8 @@ readpw(Display *dpy, const char *pws)
 						if(running != False)
 						{
 							XBell(dpy, 100);
-#ifdef SPY
-							takePicture();
+#ifdef SCRIPT
+							execScript();
 #endif
 						}
 						len = 0;
@@ -388,8 +380,8 @@ readpw(Display *dpy, const char *pws)
 			XRaiseWindow(dpy, locks[screen]->win);
 	}
 
-#ifdef SPY
-	for(; spys_count >= 0; --spys_count)
+#ifdef SCRIPT
+	for(; scripts_count >= 0; --scripts_count)
 		wait(NULL);
 #endif
 }
