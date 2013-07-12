@@ -7,15 +7,19 @@ is to add some features while keeping slock minimalistic interface.
 
 Requirements
 ------------
-In order to build slock you need the Xlib header files.
+In order to build scrlock you need the Xlib header files.
 
 
 Installation
 ------------
-Edit config.mk to match your local setup (slock is installed into
+Edit config.mk to match your local setup (scrlock is installed into
 the /usr/local namespace by default).
 
-Afterwards enter the following command to build and install slock
+Edit config.h to configure scrlock. Comment the lines defining MSG or SCRIPT
+to disable this options. Some config can be done for every one of them in
+the same file. Configuration can only be done at compile-time.
+
+Afterwards enter the following command to build and install scrlock
 (if necessary as root):
 
     make clean install
@@ -23,4 +27,7 @@ Afterwards enter the following command to build and install slock
 
 Running slock
 -------------
-Simply invoke the 'slock' command. To get out of it, enter your password.
+Simply invoke the 'scrlock' command. To get out of it, enter your password.
+If a wrong password is typed, a script is executed in an other process.
+You can enter messages with ctrl+space, saving them with enter.
+
