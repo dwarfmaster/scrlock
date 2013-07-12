@@ -18,7 +18,6 @@
 // Fonctions (undef to disable)
 #define MESSAGE // Allow to let message
 #define SPY // Capture a picture with fswebcam when wrong password is typed (need fswebcam)
-#define SCRIPT // Call a script a the end of the program
 
 // Message option
 #ifdef MESSAGE
@@ -29,11 +28,6 @@
 #ifdef SPY
 #define SPY_SUBDIR "spy/" // Used path will be $HOME/spy (will not be created so must exist)
 #define FSWEBCAM "/usr/bin/fswebcam" // The complete path to use with
-#endif
-
-// Script option
-#ifdef SCRIPT
-#define SCRIPT_SUBDIR "Prog/lockend.sh" // Path to the script from HOME : $HOME/SCRIPT_SUBDIR
 #endif
 
 #endif
