@@ -21,6 +21,7 @@
 #include <X11/keysym.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/extensions/dpms.h>
 
 #if HAVE_BSD_AUTH
 #include <login_cap.h>
@@ -229,6 +230,20 @@ readpw(Display *dpy, const char *pws)
 	KeySym ksym;
 	XEvent ev;
 
+#ifdef USEDPMS
+	Bool dpmscapable;
+	Bool indpms = False;
+	if(DPMSCapable(dpy))
+		dpmscapable = True;
+	else
+	{
+		dpmscapable = False;
+		die("Can't dpms.");
+	}
+	struct timespec ltime, ntime;
+	clock_gettime(CLOCK_BOOTTIME, &ltime);
+#endif
+
 #ifdef MESSAGE
 	Bool inMsg;
 	unsigned int msglen;
@@ -251,11 +266,28 @@ readpw(Display *dpy, const char *pws)
 	for(screen = 0; screen < nscreens; screen++)
 		blitLocked(dpy, screen);
 
-	/* As "slock" stands for "Simple X display locker", the DPMS settings
-	 * had been removed and you can set it with "xset" or some other
-	 * utility. This way the user can easily set a customized DPMS
-	 * timeout. */
+	printf("Beggining at %li with %i timeout.\n", ntime.tv_sec, DPMSTIMEOUT);
 	while(running && !XNextEvent(dpy, &ev)) {
+		printf("Event occured at %li.\n", ntime.tv_sec);
+#ifdef USEDPMS
+		clock_gettime(CLOCK_BOOTTIME, &ntime);
+		if(dpmscapable
+				&& !indpms
+				&& *usedLen == 0
+				&& (ntime.tv_sec - ltime.tv_sec) >= DPMSTIMEOUT)
+		{
+			indpms = True;
+			DPMSEnable(dpy);
+			DPMSForceLevel(dpy, DPMSModeOff);
+		}
+		else if(indpms || *usedLen != 0)
+		{
+			if(indpms)
+				DPMSDisable(dpy);
+			indpms = False;
+			clock_gettime(CLOCK_BOOTTIME, &ltime);
+		}
+#endif
 		if(ev.type == KeyPress) {
 #ifdef MESSAGE
 			// Évènement ctrl + space
@@ -364,12 +396,26 @@ readpw(Display *dpy, const char *pws)
 			}
 			else {
 #endif
-				if(llen == 0 && len != 0) {
+				if((llen == 0 && len != 0)
+#ifdef USEDPMS
+						|| indpms
+#endif
+						) {
 					for(screen = 0; screen < nscreens; screen++)
 						blitUnlock(dpy, screen);
-				} else if(llen != 0 && len == 0) {
+#ifdef USEDPMS
+					indpms = False;
+#endif
+				} else if((llen != 0 && len == 0)
+#ifdef USEDPMS
+						|| indpms
+#endif
+						) {
 					for(screen = 0; screen < nscreens; screen++)
 						blitLocked(dpy, screen);
+#ifdef USEDPMS
+					indpms = False;
+#endif
 				}
 				llen = len;
 #ifdef MESSAGE

@@ -18,6 +18,7 @@
 // Fonctions (undef to disable)
 #define MESSAGE // Allow to let message
 #define SCRIPT // Execute a script when a wrong password is typed
+#define USEDPMS // Shutdown the screen with DPMS when not typing message nor password
 
 // Message option
 #ifdef MESSAGE
@@ -27,6 +28,11 @@
 // Spy options
 #ifdef SCRIPT
 #define SCRIPTPATH "Prog/error.sh"
+#endif
+
+// DPMS options
+#ifdef USEDPMS
+#define DPMSTIMEOUT 1 // Timeout in seconds
 #endif
 
 #endif
