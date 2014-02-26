@@ -112,10 +112,8 @@ static GC createGC(Display* dpy, int screen, Drawable w, unsigned long color)
 {
 	GC gc;
 	XGCValues values;
-	// XColor color, dummy;
 	static Font font = 0;
 
-	// XAllocNamedColor(dpy, DefaultColormap(dpy, screen), "Black", &color, &dummy);
 	values.foreground = color;
 	values.background = color;
 	gc = XCreateGC(dpy, w, GCForeground | GCBackground, &values);
@@ -185,7 +183,6 @@ static void blitUnlock(Display* dpy, int screen)
 }
 
 #ifdef SCRIPT
-// takePicture -> execScript
 void execScript()
 {
 	char* home = getenv("HOME");
@@ -258,7 +255,7 @@ readpw(Display *dpy, const char *pws)
 	while(running && !XNextEvent(dpy, &ev)) {
 		if(ev.type == KeyPress) {
 #ifdef MESSAGE
-			// Évènement ctrl + space
+			/* ctrl + space event */
 			if(ev.xkey.keycode == XKeysymToKeycode(dpy, XK_space)
 					&& (ev.xkey.state & ControlMask))
 			{
@@ -500,7 +497,7 @@ main(int argc, char **argv) {
 	XSync(dpy, False);
 
 	/* Did we actually manage to lock something? */
-	if (nlocks == 0) { // nothing to protect
+	if (nlocks == 0) {
 		free(locks);
 		XCloseDisplay(dpy);
 		return 1;
