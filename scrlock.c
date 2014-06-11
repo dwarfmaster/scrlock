@@ -18,11 +18,23 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <xcb/xcb.h>
 
 #if HAVE_BSD_AUTH
 #include <login_cap.h>
 #include <bsd_auth.h>
 #endif
+
+struct screen_t {
+    xcb_screen_t* xcb;
+    xcb_window_t win;
+    xcb_gcontext_t fg;
+    xcb_gcontext_t bg;
+    xcb_font_t font;
+    uint32_t text_height;
+    uint32_t text_width;
+    struct screen_t* next;
+};
 
 static void
 die(const char *errstr, ...) {
@@ -64,8 +76,54 @@ getpw(void) { /* only run as root */
 }
 #endif
 
+static struct screen_t* load_screens(xcb_connection_t* c)
+{
+    struct screen_t* scr;
+    struct screen_t* act;
+    struct screen_t* first = NULL;
+    xcb_screen_iterator_t it;
+
+    it = xcb_setup_roots_iterator(xcb_get_setup(c));
+    for(; it.rem; xcb_screen_next(&it)) {
+        scr = malloc(sizeof(struct screen_t));
+        scr->xcb = it.data;
+        /* TODO load window and gcs. */
+
+        if(!first)
+            first = scr;
+        else
+            act->next = scr;
+        scr->next = NULL;
+        act = scr;
+    }
+
+    return first;
+}
+
+static void free_screens(struct screen_t* scrs)
+{
+    struct screen_t* act = scrs;
+    struct screen_t* next;
+    while(act) {
+        next = act->next;
+        free(act);
+        act = next;
+    }
+}
+
 int main(void)
 {
+    xcb_connection_t* c;
+    struct screen_t* screens;
+
+    /* Opening connection to X server. */
+    c = xcb_connect(NULL, NULL);
+    screens = load_screens(c);
+
+    /* TODO mainloop */
+
+    free_screens(screens);
+    xcb_disconnect(c);
     return 0;
 }
 
