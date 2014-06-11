@@ -15,19 +15,8 @@
 /* The font used when typing the message. */
 #define FONT "-*-lucida-bold-r-*-*-20-140-*-*-*-*-iso8859-15"
 
-/* Fonctions (undef to disable). */
-#define MESSAGE /* Allow to let message. */
-#define SCRIPT  /* Execute a script when a wrong password is typed. */
-
 /* Message option. */
-#ifdef MESSAGE
-#define MSGVALUE "Press ctrl + space to let a message"
-#endif
-
-/* Script options. */
-#ifdef SCRIPT
-#define SCRIPTPATH "Prog/error.sh"
-#endif
+#define DISPLAYED_MSG "Press ctrl + space to let a message"
 
 #endif
 

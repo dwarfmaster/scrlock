@@ -76,6 +76,61 @@ getpw(void) { /* only run as root */
 }
 #endif
 
+static xcb_font_t load_font(xcb_connection_t* c)
+{
+    static xcb_font_t font = 0;
+    if(font > 0)
+        return font;
+    font = xcb_generate_id(c);
+    xcb_open_font(c, font, strlen(FONT), FONT);
+    return font;
+}
+
+static void load_gcs(xcb_connection_t* c, struct screen_t* scr)
+{
+    xcb_gcontext_t gc;
+    uint32_t mask;
+    uint32_t values[3];
+    char* word = DISPLAYED_MSG;
+    xcb_char2b_t xcbword[strlen(DISPLAYED_MSG)];
+    xcb_query_text_extents_reply_t* reply;
+    xcb_query_text_extents_cookie_t cookie;
+    uint32_t i;
+
+    /* FG */
+    gc = xcb_generate_id(c);
+    mask = XCB_GC_FOREGROUND
+        | XCB_GC_BACKGROUND
+        | XCB_GC_FONT;
+    values[0] = scr->xcb->white_pixel;
+    values[1] = scr->xcb->black_pixel;
+    values[2] = load_font(c);
+    xcb_create_gc(c, gc, scr->xcb->root, mask, values);
+    scr->fg = gc;
+
+    /* BG */
+    gc = xcb_generate_id(c);
+    xcb_create_gc(c, gc, scr->xcb->root, mask, values);
+    scr->bg = gc;
+
+    /* Font */
+    scr->font = values[2];
+    for(i = 0; i < strlen(word); ++i) {
+        xcbword[i].byte1 = word[i];
+        xcbword[i].byte2 = 0;
+    }
+    cookie = xcb_query_text_extents(c, scr->font, strlen(word), xcbword);
+    reply  = xcb_query_text_extents_reply(c, cookie, NULL);
+    scr->text_width  = reply->overall_width;
+    scr->text_height = reply->overall_ascent + reply->overall_descent;
+    free(reply);
+}
+
+static void close_gcs(struct screen_t* scr)
+{
+    /* Nothing to do. */
+}
+
 static struct screen_t* load_screens(xcb_connection_t* c)
 {
     struct screen_t* scr;
@@ -87,7 +142,8 @@ static struct screen_t* load_screens(xcb_connection_t* c)
     for(; it.rem; xcb_screen_next(&it)) {
         scr = malloc(sizeof(struct screen_t));
         scr->xcb = it.data;
-        /* TODO load window and gcs. */
+        load_gcs(c, scr);
+        /* TODO load window. */
 
         if(!first)
             first = scr;
@@ -106,6 +162,7 @@ static void free_screens(struct screen_t* scrs)
     struct screen_t* next;
     while(act) {
         next = act->next;
+        close_gcs(act);
         free(act);
         act = next;
     }
