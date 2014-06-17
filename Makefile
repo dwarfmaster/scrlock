@@ -9,7 +9,7 @@ CC = cc
 INCS = -I. -I/usr/include `pkg-config --cflags xcb xcb-image`
 LIBS = -L/usr/lib -lc -lcrypt `pkg-config --libs xcb xcb-image`
 CFLAGS = -std=c99 -pedantic -Wall -O0 -g ${INCS}
-LDFLAGS = -s ${LIBS}
+LDFLAGS = ${LIBS} -g
 
 all: options scrlock
 
