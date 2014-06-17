@@ -6,8 +6,8 @@ OBJ = ${SRC:.c=.o}
 PREFIX = /usr/local
 CC = cc
 
-INCS = -I. -I/usr/include `pkg-config --cflags xcb xcb-image`
-LIBS = -L/usr/lib -lc -lcrypt `pkg-config --libs xcb xcb-image`
+INCS = -I. -I/usr/include `pkg-config --cflags xcb xcb-image xcb-keysyms`
+LIBS = -L/usr/lib -lc -lcrypt `pkg-config --libs xcb xcb-image xcb-keysyms`
 CFLAGS = -std=c99 -pedantic -Wall -O0 -g ${INCS}
 LDFLAGS = ${LIBS} -g
 

@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <xcb/xcb.h>
+#include <xcb/xcb_keysyms.h>
 #include <xcb/xcb_image.h>
 
 #if HAVE_BSD_AUTH
@@ -247,17 +248,58 @@ static void free_screens(struct screen_t* scrs)
     }
 }
 
+static void mainloop(struct screen_t* scrs, const char* pws)
+{
+    xcb_connection_t* c = scrs->c;
+    char passwd[256];
+    unsigned int len;
+    int running;
+    xcb_generic_event_t* ev;
+    xcb_key_press_event_t* keypress;
+    uint8_t evtype;
+    xcb_keysym_t symbol;
+    xcb_key_symbols_t* syms;
+
+    syms = xcb_key_symbols_alloc(c);
+
+    len = 0;
+    running = 1;
+    while(running && (ev = xcb_wait_for_event(c))) {
+        evtype = ev->response_type & ~0x80;
+        if(evtype == XCB_EXPOSE) {
+            /* TODO draw screens */
+        } else if(evtype == XCB_KEY_PRESS) {
+            keypress = (xcb_key_press_event_t*)ev;
+            symbol   = xcb_key_press_lookup_keysym(syms, keypress, 0);
+
+            /* TODO handle press. */
+            if(xcb_is_keypad_key(symbol))
+                running = 0;
+        }
+        free(ev);
+    }
+
+    xcb_key_symbols_free(syms);
+}
+
 int main(void)
 {
     xcb_connection_t* c;
     struct screen_t* screens;
+    const char* pws;
+
+    /* Getting password. */
+    if(!getpwuid(getuid()))
+        die("scrlock: no password entry for you");
+    pws = getpw();
 
     /* Opening connection to X server. */
     c = xcb_connect(NULL, NULL);
     screens = load_screens(c);
     grab_key(screens);
+    xcb_flush(c);
 
-    /* TODO mainloop */
+    mainloop(screens, pws);
 
     ungrab_key(screens);
     free_screens(screens);
