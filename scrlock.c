@@ -219,6 +219,7 @@ static struct screen_t* load_screens(xcb_connection_t* c)
     for(; it.rem; xcb_screen_next(&it)) {
         scr = malloc(sizeof(struct screen_t));
         scr->xcb = it.data;
+        scr->c = c;
         load_gcs(scr);
         open_window(scr);
 
