@@ -8,8 +8,8 @@ CC = cc
 
 X11INC = /usr/X11R6/include
 X11LIB = /usr/X11R6/lib
-INCS = -I. -I/usr/include `pkg-config --cflags xcb`
-LIBS = -L/usr/lib -lc -lcrypt `pkg-config --libs xcb`
+INCS = -I. -I/usr/include `pkg-config --cflags xcb xcb-image`
+LIBS = -L/usr/lib -lc -lcrypt `pkg-config --libs xcb xcb-image`
 CFLAGS = -std=c99 -pedantic -Wall -Os ${INCS}
 LDFLAGS = -s ${LIBS}
 

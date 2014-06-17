@@ -19,11 +19,14 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <xcb/xcb.h>
+#include <xcb/xcb_image.h>
 
 #if HAVE_BSD_AUTH
 #include <login_cap.h>
 #include <bsd_auth.h>
 #endif
+
+static uint8_t pixmap_data[1] = { 0 };
 
 struct screen_t {
     xcb_connection_t* c;
@@ -152,16 +155,33 @@ static void close_gcs(struct screen_t* scr)
 static void open_window(struct screen_t* scr)
 {
     xcb_window_t win;
+    xcb_pixmap_t pixmap;
+    xcb_cursor_t cursor;
     uint32_t mask;
-    uint32_t values[3];
+    uint32_t values[4];
 
+    /* Create an empty cursor. */
+    pixmap = xcb_create_pixmap_from_bitmap_data(scr->c, scr->win, pixmap_data,
+            1, 1, 1,
+            scr->xcb->black_pixel,
+            scr->xcb->white_pixel,
+            NULL);
+    cursor = xcb_generate_id(scr->c);
+    xcb_create_cursor(scr->c, cursor, pixmap, pixmap,
+            scr->xcb->black_pixel, scr->xcb->black_pixel, scr->xcb->black_pixel,
+            scr->xcb->black_pixel, scr->xcb->black_pixel, scr->xcb->black_pixel,
+            0, 0);
+
+    /* Create the window. */
     win = xcb_generate_id(scr->c);
     mask = XCB_CW_BACK_PIXEL
         | XCB_CW_OVERRIDE_REDIRECT
-        | XCB_CW_EVENT_MASK;
+        | XCB_CW_EVENT_MASK
+        | XCB_CW_CURSOR;
     values[0] = scr->xcb->black_pixel;
     values[1] = 1;
     values[2] = XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS;
+    values[3] = cursor;
     xcb_create_window(scr->c,
             XCB_COPY_FROM_PARENT,
             win,
@@ -175,8 +195,9 @@ static void open_window(struct screen_t* scr)
             mask, values
             );
 
-    /* TODO hide cursor */
-    /* TODO todo grab input and cursor */
+    /* Free the pixmap and the cursor. */
+    xcb_free_pixmap(scr->c, pixmap);
+    xcb_free_cursor(scr->c, cursor);
 
     scr->win = win;
     xcb_map_window(scr->c, win);
