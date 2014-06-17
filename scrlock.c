@@ -77,6 +77,22 @@ getpw(void) { /* only run as root */
 }
 #endif
 
+static void grab_key(struct screen_t* scr)
+{
+    xcb_grab_keyboard_cookie_t cookie;
+    xcb_grab_keyboard_reply_t* reply;
+
+    cookie = xcb_grab_keyboard(scr->c, 1, scr->win, XCB_CURRENT_TIME, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_SYNC);
+    reply  = xcb_grab_keyboard_reply(scr->c, cookie, NULL);
+    free(reply);
+}
+
+static void ungrab_key(struct screen_t* scr)
+{
+    xcb_ungrab_keyboard(scr->c, XCB_CURRENT_TIME);
+    xcb_ungrab_pointer (scr->c, XCB_CURRENT_TIME);
+}
+
 static xcb_font_t load_font(xcb_connection_t* c)
 {
     static xcb_font_t font = 0;
@@ -217,9 +233,11 @@ int main(void)
     /* Opening connection to X server. */
     c = xcb_connect(NULL, NULL);
     screens = load_screens(c);
+    grab_key(screens);
 
     /* TODO mainloop */
 
+    ungrab_key(screens);
     free_screens(screens);
     xcb_disconnect(c);
     return 0;
