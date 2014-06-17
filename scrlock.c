@@ -26,6 +26,7 @@
 #endif
 
 struct screen_t {
+    xcb_connection_t* c;
     xcb_screen_t* xcb;
     xcb_window_t win;
     xcb_gcontext_t fg;
@@ -86,8 +87,9 @@ static xcb_font_t load_font(xcb_connection_t* c)
     return font;
 }
 
-static void load_gcs(xcb_connection_t* c, struct screen_t* scr)
+static void load_gcs(struct screen_t* scr)
 {
+    xcb_connection_t* c = scr->c;
     xcb_gcontext_t gc;
     uint32_t mask;
     uint32_t values[3];
@@ -131,20 +133,20 @@ static void close_gcs(struct screen_t* scr)
     /* Nothing to do. */
 }
 
-static void open_window(xcb_connection_t* c, struct screen_t* scr)
+static void open_window(struct screen_t* scr)
 {
     xcb_window_t win;
     uint32_t mask;
     uint32_t values[3];
 
-    win = xcb_generate_id(c);
+    win = xcb_generate_id(scr->c);
     mask = XCB_CW_BACK_PIXEL
         | XCB_CW_OVERRIDE_REDIRECT
         | XCB_CW_EVENT_MASK;
     values[0] = scr->xcb->black_pixel;
     values[1] = 1;
     values[2] = XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS;
-    xcb_create_window(c,
+    xcb_create_window(scr->c,
             XCB_COPY_FROM_PARENT,
             win,
             scr->xcb->root,
@@ -158,13 +160,15 @@ static void open_window(xcb_connection_t* c, struct screen_t* scr)
             );
 
     /* TODO hide cursor */
+    /* TODO todo grab input and cursor */
+
     scr->win = win;
-    xcb_map_window(c, win);
+    xcb_map_window(scr->c, win);
 }
 
-static void close_window(xcb_connection_t* c, struct screen_t* scr)
+static void close_window(struct screen_t* scr)
 {
-    xcb_destroy_window(c, scr->win);
+    xcb_destroy_window(scr->c, scr->win);
 }
 
 static struct screen_t* load_screens(xcb_connection_t* c)
@@ -178,8 +182,8 @@ static struct screen_t* load_screens(xcb_connection_t* c)
     for(; it.rem; xcb_screen_next(&it)) {
         scr = malloc(sizeof(struct screen_t));
         scr->xcb = it.data;
-        open_gcs(c, scr);
-        load_window(c, scr);
+        load_gcs(scr);
+        open_window(scr);
 
         if(!first)
             first = scr;
@@ -199,6 +203,7 @@ static void free_screens(struct screen_t* scrs)
     while(act) {
         next = act->next;
         close_gcs(act);
+        close_window(act);
         free(act);
         act = next;
     }
