@@ -248,6 +248,20 @@ static void free_screens(struct screen_t* scrs)
     }
 }
 
+static void draw_window(struct screen_t* scr, const char* msg, xcb_gcontext_t gc)
+{
+    xcb_rectangle_t bg;
+
+    bg.x = bg.y = 0;
+    bg.width  = scr->xcb->width_in_pixels;
+    bg.height = scr->xcb->height_in_pixels;
+    xcb_poly_fill_rectangle(scr->c, scr->win, gc, 1, &bg);
+
+    if(msg) {
+        /* TODO draw msg. */
+    }
+}
+
 static void mainloop(struct screen_t* scrs, const char* pws)
 {
     xcb_connection_t* c = scrs->c;
@@ -266,9 +280,17 @@ static void mainloop(struct screen_t* scrs, const char* pws)
     running = 1;
     while(running && (ev = xcb_wait_for_event(c))) {
         evtype = ev->response_type & ~0x80;
+        /* Drawing the windows. */
         if(evtype == XCB_EXPOSE) {
-            /* TODO draw screens */
-        } else if(evtype == XCB_KEY_PRESS) {
+            struct screen_t* act = scrs;
+            while(act) {
+                draw_window(act, passwd, act->fg);
+                act = act->next;
+            }
+        }
+        
+        /* Handling the keyboard events. */
+        else if(evtype == XCB_KEY_PRESS) {
             keypress = (xcb_key_press_event_t*)ev;
             symbol   = xcb_key_press_lookup_keysym(syms, keypress, 0);
 
@@ -277,6 +299,7 @@ static void mainloop(struct screen_t* scrs, const char* pws)
                 running = 0;
         }
         free(ev);
+        xcb_flush(c);
     }
 
     xcb_key_symbols_free(syms);
