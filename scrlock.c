@@ -27,8 +27,6 @@
 #include <bsd_auth.h>
 #endif
 
-static uint8_t pixmap_data[1] = { 0 };
-
 struct screen_t {
     xcb_connection_t* c;
     xcb_screen_t* xcb;
@@ -85,10 +83,14 @@ static void grab_key(struct screen_t* scr)
 {
     xcb_grab_keyboard_cookie_t cookie;
     xcb_grab_keyboard_reply_t* reply;
+    xcb_generic_error_t* error;
 
     cookie = xcb_grab_keyboard(scr->c, 1, scr->win, XCB_CURRENT_TIME, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_SYNC);
-    reply  = xcb_grab_keyboard_reply(scr->c, cookie, NULL);
+    reply  = xcb_grab_keyboard_reply(scr->c, cookie, &error);
     free(reply);
+
+    if(error)
+        die("Couldn't grab keys : %d\n", error->error_code);
 }
 
 static void ungrab_key(struct screen_t* scr)
@@ -156,26 +158,11 @@ static void close_gcs(struct screen_t* scr)
 static void open_window(struct screen_t* scr)
 {
     xcb_window_t win;
-    xcb_pixmap_t pixmap;
-    xcb_cursor_t cursor;
     xcb_void_cookie_t cookie_win;
     xcb_void_cookie_t cookie_map;
-    xcb_void_cookie_t cookie_cursor;
     xcb_generic_error_t* error;
     uint32_t mask;
-    uint32_t values[4];
-
-    /* Create an empty cursor. */
-    pixmap = xcb_create_pixmap_from_bitmap_data(scr->c, scr->win, pixmap_data,
-            1, 1, 1,
-            scr->xcb->black_pixel,
-            scr->xcb->white_pixel,
-            NULL);
-    cursor = xcb_generate_id(scr->c);
-    cookie_cursor = xcb_create_cursor_checked(scr->c, cursor, pixmap, pixmap,
-            scr->xcb->black_pixel, scr->xcb->black_pixel, scr->xcb->black_pixel,
-            scr->xcb->black_pixel, scr->xcb->black_pixel, scr->xcb->black_pixel,
-            0, 0);
+    uint32_t values[3];
 
     /* Create the window. */
     win = xcb_generate_id(scr->c);
@@ -185,7 +172,6 @@ static void open_window(struct screen_t* scr)
     values[0] = scr->xcb->black_pixel;
     values[1] = 1;
     values[2] = XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS;
-    values[3] = cursor;
     cookie_win = xcb_create_window_checked(
             scr->c,
             XCB_COPY_FROM_PARENT,
@@ -200,17 +186,10 @@ static void open_window(struct screen_t* scr)
             mask, values
             );
 
-    /* Free the pixmap and the cursor. */
-    xcb_free_pixmap(scr->c, pixmap);
-    xcb_free_cursor(scr->c, cursor);
-
     scr->win = win;
     cookie_map = xcb_map_window_checked(scr->c, win);
 
     /* Check errors. */
-    error = xcb_request_check(scr->c, cookie_cursor);
-    if(error)
-        die("Couldn't create cursor : %d\n", error->error_code);
     error = xcb_request_check(scr->c, cookie_win);
     if(error)
         die("Couldn't create window : %d\n", error->error_code);
