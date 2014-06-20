@@ -158,6 +158,10 @@ static void open_window(struct screen_t* scr)
     xcb_window_t win;
     xcb_pixmap_t pixmap;
     xcb_cursor_t cursor;
+    xcb_void_cookie_t cookie_win;
+    xcb_void_cookie_t cookie_map;
+    xcb_void_cookie_t cookie_cursor;
+    xcb_generic_error_t* error;
     uint32_t mask;
     uint32_t values[4];
 
@@ -168,7 +172,7 @@ static void open_window(struct screen_t* scr)
             scr->xcb->white_pixel,
             NULL);
     cursor = xcb_generate_id(scr->c);
-    xcb_create_cursor(scr->c, cursor, pixmap, pixmap,
+    cookie_cursor = xcb_create_cursor_checked(scr->c, cursor, pixmap, pixmap,
             scr->xcb->black_pixel, scr->xcb->black_pixel, scr->xcb->black_pixel,
             scr->xcb->black_pixel, scr->xcb->black_pixel, scr->xcb->black_pixel,
             0, 0);
@@ -183,7 +187,8 @@ static void open_window(struct screen_t* scr)
     values[1] = 1;
     values[2] = XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS;
     values[3] = cursor;
-    xcb_create_window(scr->c,
+    cookie_win = xcb_create_window_checked(
+            scr->c,
             XCB_COPY_FROM_PARENT,
             win,
             scr->xcb->root,
@@ -201,7 +206,18 @@ static void open_window(struct screen_t* scr)
     xcb_free_cursor(scr->c, cursor);
 
     scr->win = win;
-    xcb_map_window(scr->c, win);
+    cookie_map = xcb_map_window_checked(scr->c, win);
+
+    /* Check errors. */
+    error = xcb_request_check(scr->c, cookie_cursor);
+    if(error)
+        die("Couldn't create cursor : %d\n", error->error_code);
+    error = xcb_request_check(scr->c, cookie_win);
+    if(error)
+        die("Couldn't create window : %d\n", error->error_code);
+    error = xcb_request_check(scr->c, cookie_map);
+    if(error)
+        die("Couldn't map window : %d\n", error->error_code);
 }
 
 static void close_window(struct screen_t* scr)
