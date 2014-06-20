@@ -181,8 +181,7 @@ static void open_window(struct screen_t* scr)
     win = xcb_generate_id(scr->c);
     mask = XCB_CW_BACK_PIXEL
         | XCB_CW_OVERRIDE_REDIRECT
-        | XCB_CW_EVENT_MASK
-        | XCB_CW_CURSOR;
+        | XCB_CW_EVENT_MASK;
     values[0] = scr->xcb->black_pixel;
     values[1] = 1;
     values[2] = XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS;
